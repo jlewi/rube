@@ -18,20 +18,18 @@ kubectl apply -f ./manifests
 kubectl -n rube get pods -w
 ```
 
+To debug the `CrashLoopBackOff` status of the pod, you should inspect the logs of the pod to identify any errors or issues that might be causing the crash. You can do this using the following command:
+
 ## Monitoring
 
 Fetch the logs for the rube app using gcloud
 
 ```bash {"id":"01JAV0FH9HF58VMYEWAJ7CKD5Z","interactive":"true"}
-gcloud logging read "resource.type=\"k8s_container\" AND labels.k8s-pod/app=\"rube\"" --limit=100 --freshness=1h --format="table(severity,timestamp,jsonPayload.message)"
+gcloud logging read "resource.type=\"k8s_container\" AND labels.k8s-pod/app=\"rube\"" --limit=100 --freshness=1h --format="table(severity,timestamp,jsonPayload.message,jsonPayload.traceId)"
 ```
-
-```bash {"id":"01JAV0S2H6VJVWS2HS0JEEHEH0","interactive":"false"}
-kubectl -n rube get secrets
-```
-
-To debug the `CrashLoopBackOff` status of the pod in the `rube` namespace, we will fetch the logs for the specific pod that's encountering issues.
 
 ```bash
-kubectl -n rube logs  rube-8654b7854d-8p8zh
+kubectl -n rube port-forward svc/rube 8080:80
 ```
+
+The command to fetch the logs for the `rube` app did not return any output. This indicates that there may be no logging entries available for the past hour, or the pod may not have generated logs due to its state.
