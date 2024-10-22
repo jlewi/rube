@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rube
+  namespace: rube
+  labels:
+    app: rube
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rube
+  template:
+    metadata:
+      labels:
+        app: rube
+    spec:
+      containers:
+      - name: rube
+        image: us-west1-docker.pkg.dev/foyle-public/images/rube/rube-dcd0431509013ed6173fca865862582f@sha256:cce5441606a370b76ccced530d7d6453a091c56429f52b3dad7e78fec9152095
+        args:
+        - --honeycomb-apikey=gcpsecretmanager:///projects/foyle-dev/secrets/honeycomb-api-key/versions/latest
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            cpu: "250m"
+            memory: "256Mi"
+          requests:
+            cpu: "250m"
+            memory: "256Mi"        
+      serviceAccountName: rube

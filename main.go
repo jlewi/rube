@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"github.com/go-logr/zapr"
 	"github.com/jlewi/foyle/rube/pkg"
+	"go.uber.org/zap"
 	"log"
 	"os"
 
@@ -13,27 +15,18 @@ func main() {
 	var honeycombAPIKeyFile string
 	var httpPort int
 	var rootCmd = &cobra.Command{
-		Use:   "otel-gin-server",
+		Use:   "rube",
 		Short: "A Gin HTTP server instrumented with OTEL, logging with logr/zapr",
 		Run: func(cmd *cobra.Command, args []string) {
 			app := &pkg.App{}
 			err := app.Run(httpPort, honeycombAPIKeyFile)
 
 			if err != nil {
+				log := zapr.NewLogger(zap.L())
+				log.Error(err, "Failed to run the application")
 				fmt.Fprintf(os.Stdout, "Error: %v\n", err)
 				os.Exit(1)
 			}
-
-			//tp, err := setupTracer(honeycombAPIKey)
-			//if err != nil {
-			//	logger.Error(err, "Failed to initialize tracer")
-			//	os.Exit(1)
-			//}
-			//defer func() {
-			//	if err := tp.Shutdown(context.Background()); err != nil {
-			//		logger.Error(err, "Failed to shutdown tracer")
-			//	}
-			//}()
 		},
 	}
 
