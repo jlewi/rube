@@ -6,6 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-logr/zapr"
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"net"
 	"net/http"
@@ -82,10 +84,8 @@ func (s *Server) createGinEngine() error {
 	log.Info("Setting up the server")
 
 	router := gin.Default()
-
-	router.GET("/", func(c *gin.Context) {
-		c.String(http.StatusOK, "Hello, world!")
-	})
+	router.Use(otelgin.Middleware("gin-server"))
+	router.GET("/", s.sayHello)
 	router.GET("/healthz", s.healthCheck)
 
 	s.engine = router
@@ -122,6 +122,16 @@ func trapInterrupt(s *Server) {
 		log.Info("Received signal", "signal", msg)
 		s.shutdown()
 	}()
+}
+
+func (s *Server) sayHello(ctx *gin.Context) {
+	span := trace.SpanFromContext(ctx.Request.Context())
+	traceId := span.SpanContext().TraceID()
+
+	log := zapr.NewLogger(zap.L()).WithValues("traceId", traceId.String())
+
+	log.Info("Saying hello")
+	ctx.String(http.StatusOK, "Hello, world!\n traceId: %s", traceId.String())
 }
 
 func (s *Server) healthCheck(ctx *gin.Context) {

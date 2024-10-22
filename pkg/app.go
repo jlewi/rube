@@ -15,6 +15,10 @@ type App struct {
 }
 
 func (a *App) Run(httpPort int, honeycombApiKeyFile string) error {
+	if err := a.setupLogging(); err != nil {
+		return errors.Wrapf(err, "Failed to setup logging")
+	}
+
 	if err := a.SetupHoneycomb(honeycombApiKeyFile); err != nil {
 		return errors.Wrapf(err, "Failed to setup Honeycomb")
 	}
@@ -37,6 +41,26 @@ func (a *App) Serve(httpPort int) error {
 	}
 
 	return s.Run()
+}
+
+func (a *App) setupLogging() error {
+	// Configure encoder for JSON format
+	c := zap.NewProductionConfig()
+	// Use the keys used by cloud logging
+	// https://cloud.google.com/logging/docs/structured-logging
+	c.EncoderConfig.LevelKey = "severity"
+	c.EncoderConfig.TimeKey = "time"
+	c.EncoderConfig.MessageKey = "message"
+	// We attach the function key to the logs because that is useful for identifying the function that generated the log.
+	c.EncoderConfig.FunctionKey = "function"
+
+	l, err := c.Build()
+	if err != nil {
+		return errors.Wrap(err, "failed to build logger")
+	}
+
+	zap.ReplaceGlobals(l)
+	return nil
 }
 
 // SetupHoneycomb configures OTEL to export metrics to Honeycomb
