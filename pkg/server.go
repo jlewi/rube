@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-logr/zapr"
 	"github.com/pkg/errors"
+	"github.com/sashabaranov/go-openai"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
@@ -23,19 +24,22 @@ type Server struct {
 	BindAddress      string
 	engine           *gin.Engine
 	hServer          *http.Server
+	client           *openai.Client
 	shutdownComplete chan bool
 }
 
 // NewServer creates a new server
-func NewServer(httpPort int) (*Server, error) {
+func NewServer(httpPort int, client *openai.Client) (*Server, error) {
 	s := &Server{
 		HttpPort:    httpPort,
 		BindAddress: "0.0.0.0",
+		client:      client,
 	}
 
 	if err := s.createGinEngine(); err != nil {
 		return nil, err
 	}
+
 	return s, nil
 }
 
@@ -84,7 +88,7 @@ func (s *Server) createGinEngine() error {
 	log.Info("Setting up the server")
 
 	router := gin.Default()
-	router.Use(otelgin.Middleware("gin-server"))
+	router.Use(otelgin.Middleware("gin-server"), JSONLogMiddleware())
 	router.GET("/", s.sayHello)
 	router.GET("/healthz", s.healthCheck)
 
@@ -130,7 +134,25 @@ func (s *Server) sayHello(ctx *gin.Context) {
 
 	log := zapr.NewLogger(zap.L()).WithValues("traceId", traceId.String())
 
-	log.Info("Saying hello")
+	req := openai.ChatCompletionRequest{
+		Model: openai.GPT4oMini,
+		Messages: []openai.ChatCompletionMessage{
+			{Role: openai.ChatMessageRoleUser, Content: "Generate a greeting similar to 'Hello, world!'. Be funny and creative but keep it short and clean."},
+		},
+	}
+
+	log.Info("OpenAI request", "request", req)
+	resp, err := s.client.CreateChatCompletion(ctx.Request.Context(), req)
+	if err != nil {
+		log.Error(err, "Failed to create chat completion")
+		ctx.String(http.StatusInternalServerError, "Failed to generate greeting; error: %s", err.Error())
+		return
+	}
+	log.Info("OpenAI response", "response", resp)
+	if len(resp.Choices) > 0 {
+		ctx.String(http.StatusOK, "Greeting: %s\n traceId: %s", resp.Choices[0].Message.Content, traceId.String())
+		return
+	}
 	ctx.String(http.StatusOK, "Hello, world!\n traceId: %s", traceId.String())
 }
 
@@ -142,4 +164,32 @@ func (s *Server) healthCheck(ctx *gin.Context) {
 	}
 	code := http.StatusOK
 	ctx.JSON(code, d)
+}
+
+// JSONLogMiddleware logs a gin HTTP request in JSON format, with some additional custom key/values
+func JSONLogMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		log := zapr.NewLogger(zap.L())
+		// Start timer
+		//start := time.Now()
+
+		// Process Request
+		c.Next()
+
+		// Stop timer
+		//duration := util.GetDurationInMillseconds(start)
+
+		log = log.WithValues(
+			"method", c.Request.Method,
+			"path", c.Request.RequestURI,
+			"status", c.Writer.Status(),
+			"referrer", c.Request.Referer(),
+			"request_id", c.Writer.Header().Get("Request-Id"))
+
+		if c.Writer.Status() >= 500 {
+			log.Error(c.Err(), "Internal Server Error")
+		} else {
+			log.Info("")
+		}
+	}
 }

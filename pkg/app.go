@@ -6,15 +6,17 @@ import (
 	"github.com/honeycombio/otel-config-go/otelconfig"
 	"github.com/jlewi/monogo/files"
 	"github.com/pkg/errors"
+	"github.com/sashabaranov/go-openai"
 	"go.uber.org/zap"
 	"os"
 )
 
 type App struct {
 	otelShutdownFn func()
+	client         *openai.Client
 }
 
-func (a *App) Run(httpPort int, honeycombApiKeyFile string) error {
+func (a *App) Run(httpPort int, honeycombApiKeyFile string, openaiApiKeyFile string) error {
 	if err := a.setupLogging(); err != nil {
 		return errors.Wrapf(err, "Failed to setup logging")
 	}
@@ -23,14 +25,18 @@ func (a *App) Run(httpPort int, honeycombApiKeyFile string) error {
 		return errors.Wrapf(err, "Failed to setup Honeycomb")
 	}
 
+	client, err := NewClient(openaiApiKeyFile)
+	if err != nil {
+		return err
+	}
+	a.client = client
 	return a.Serve(httpPort)
 }
 
 // Serve sets up and runs the server
 // This is blocking
 func (a *App) Serve(httpPort int) error {
-
-	s, err := NewServer(httpPort)
+	s, err := NewServer(httpPort, a.client)
 
 	if err != nil {
 		return err

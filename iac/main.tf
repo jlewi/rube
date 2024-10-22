@@ -35,3 +35,8 @@ resource "google_service_account_iam_binding" "allow_impersonation" {
     "serviceAccount:foyle-dev.svc.id.goog[rube/rube]"
   ]
 }
+resource "google_secret_manager_secret_iam_member" "accessor" {
+  secret_id = "openai-api-key"
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:rube-demo@foyle-dev.iam.gserviceaccount.com"
+}
