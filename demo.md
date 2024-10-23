@@ -11,7 +11,35 @@ kubectl -n rube port-forward svc/rube 8080:80
 ## Setup
 
 * Remove the permission to read the secret openai-api-key by the rube-demo account
+*  edit iac/main.tf to remove the permission to read the secret for dev
 * Make sure it is configured to use openai-api-key and deployed.
+
+* Apply the terraform
+
+```bash
+cd iac
+terraform apply --auto-approve
+```
+
+* Delete the rube-dev pods
+* Ensure its crash looping
+* You might need to kill it a couple times to make sure it restarts without access
+
+```bash {"id":"01JAWX1H39Z0R3M5ZXXW06QMNM","interactive":"false"}
+kubectl -n rube delete pod -l app=rube,env=dev
+```
+
+```bash {"id":"01JAWX25A8GAQWYC6VVKKAP4V7","interactive":"false"}
+# Verify that the new pods are created after deletion
+kubectl -n rube get pods -l app=rube,env=dev
+```
+
+To diagnose the issue with the `rube-dev` pods that are in an `Error` state, let’s check the logs of the newly created pod to identify why it’s failing.
+
+```bash {"id":"01JAWX3JTXHJ4CDKQAN70HRW7Z","interactive":"false"}
+# 1. Verify the logs of the newly created pod to ensure it is running correctly
+kubectl -n rube logs rube-dev-55f9cc8699-qfjt7
+```
 
 ## Observability
 
@@ -50,7 +78,7 @@ gcloud secrets get-iam-policy openai-api-key
 ```
 
 * Use gcloud iam policy troubleshooter to check whether the service account rube-demo in project foyle-dev can
-  read the secret 
+   read the secret
 
 ```bash {"id":"01JAV62Z5A1JAXK63MBSY4ZHN9","interactive":"true"}
 gcloud policy-troubleshoot iam \
@@ -113,7 +141,7 @@ kubectl -n rube get pods
 
 To debug the `CrashLoopBackOff` status of the `rube-8689fcbdb-nsglc` pod, follow these steps:
 
-* Fetch the logs for the rube app using gcloud 
+* Fetch the logs for the rube app using gcloud
 
 ```bash {"id":"01JAV724F7SEVY36SRG0Z53ZMN","interactive":"false"}
 gcloud logging read "resource.type=\"k8s_container\" AND labels.k8s-pod/app=\"rube\"" --limit=100 --freshness=1h --format="table(severity,timestamp,jsonPayload.message,jsonPayload.error,jsonPayload.traceId)"

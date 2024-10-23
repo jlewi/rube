@@ -9,4 +9,4 @@ spec:
       - name: rube        
         args:
         - --honeycomb-apikey=gcpsecretmanager:///projects/foyle-dev/secrets/honeycomb-api-key/versions/latest
-        - --openai-apikey=gcpsecretmanager:///projects/foyle-dev/secrets/rube-prod-openai-apikey/versions/latest
+        - --openai-apikey=gcpsecretmanager:///projects/foyle-dev/secrets/rube-dev-openai-apikey/versions/latest

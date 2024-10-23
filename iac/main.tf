@@ -62,3 +62,9 @@ resource "google_compute_managed_ssl_certificate" "foyle_dev_cert" {
     ]
   }
 }
+
+resource "google_secret_manager_secret_iam_member" "rube_prod_accessor" {
+  secret_id = "rube-prod-openai-apikey"
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:rube-demo@foyle-dev.iam.gserviceaccount.com"
+}

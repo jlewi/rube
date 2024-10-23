@@ -23,7 +23,7 @@ spec:
             type: ReplacePrefixMatch
             replacePrefixMatch: /
     backendRefs:
-    - name: rube
+    - name: rube-dev
       port: 80
 
 ---
