@@ -89,8 +89,9 @@ func (s *Server) createGinEngine() error {
 
 	router := gin.Default()
 	router.Use(otelgin.Middleware("gin-server"), JSONLogMiddleware())
-	router.GET("/", s.sayHello)
+
 	router.GET("/healthz", s.healthCheck)
+	router.GET("/", s.sayHello)
 
 	s.engine = router
 	return nil
@@ -157,6 +158,8 @@ func (s *Server) sayHello(ctx *gin.Context) {
 }
 
 func (s *Server) healthCheck(ctx *gin.Context) {
+	log := zapr.NewLogger(zap.L())
+
 	// TODO(jeremy): We should return the version
 	d := gin.H{
 		"server": "rube",
@@ -170,14 +173,8 @@ func (s *Server) healthCheck(ctx *gin.Context) {
 func JSONLogMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		log := zapr.NewLogger(zap.L())
-		// Start timer
-		//start := time.Now()
-
 		// Process Request
 		c.Next()
-
-		// Stop timer
-		//duration := util.GetDurationInMillseconds(start)
 
 		log = log.WithValues(
 			"method", c.Request.Method,
