@@ -38,7 +38,7 @@ spec:
         image: us-west1-docker.pkg.dev/foyle-public/images/rube/rube-dcd0431509013ed6173fca865862582f@sha256:4771cf207d0a217d39c7a468d40029144a23afcf58e31b3eb765fb1b219f8473
         args:
         - --honeycomb-apikey=gcpsecretmanager:///projects/foyle-dev/secrets/honeycomb-api-key/versions/latest
-        - --openai-apikey=gcpsecretmanager:///projects/foyle-dev/secrets/rube-demo-openai-apikey/versions/latest
+        - --openai-apikey=gcpsecretmanager:///projects/foyle-dev/secrets/openai-apikey/versions/latest
         ports:
         - containerPort: 8080
         resources:

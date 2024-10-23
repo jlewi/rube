@@ -1,0 +1,12 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rube  
+spec:
+  template:    
+    spec:
+      containers:
+      - name: rube        
+        args:
+        - --honeycomb-apikey=gcpsecretmanager:///projects/foyle-dev/secrets/honeycomb-api-key/versions/latest
+        - --openai-apikey=gcpsecretmanager:///projects/foyle-dev/secrets/rube-demo-openai-apikey/versions/latest

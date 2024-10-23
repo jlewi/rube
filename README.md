@@ -11,7 +11,11 @@ KO_DOCKER_REPO=us-west1-docker.pkg.dev/foyle-public/images/rube ko build .
 ## Deploy it
 
 ```bash {"id":"01JAV0AB0THJFS20GKNWMXMN05","interactive":"true"}
-kubectl apply -f ./manifests
+kustomize build ./manifests/dev | kubectl apply -f -
+```
+
+```bash {"id":"01JAVQ4MPFX0G0E1A9RA1PEZWM","interactive":"true"}
+kustomize build ./manifests/prod | kubectl apply -f -
 ```
 
 ```bash {"id":"01JAV0B6T625Z5G4KM3WA4SPCN","interactive":"false"}
