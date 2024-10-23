@@ -32,4 +32,32 @@ gcloud logging read "resource.type=\"k8s_container\" AND labels.k8s-pod/app=\"ru
 kubectl -n rube port-forward svc/rube 8080:80
 ```
 
-The command to fetch the logs for the `rube` app did not return any output. This indicates that there may be no logging entries available for the past hour, or the pod may not have generated logs due to its state.
+## Setup the gateway
+
+* dev.foyle.io should be pointing at the IP address
+
+```sh
+# create the namespace
+kubectl create namespace gateway
+```
+
+```bash {"id":"01JAVBT0TSW5X05QV13WTJDN6X","interactive":"true"}
+kubectl apply -f manifests/gateway.yaml
+kubectl apply -f manifests/httproute.yaml
+```
+
+```bash
+kubectl -n gateway  describe gateway
+```
+
+```bash {"id":"01JAVCQ2EP3X6X8Z53R5HFJZSH","interactive":"false"}
+# Now that the namespace and required resources are created, let's check the deployment status of the rube app.
+kubectl -n rube get deployments
+kubectl -n rube describe deployment rube
+```
+
+* List the static ip addresses
+
+```bash {"id":"01JAVCDY7XDY2X58WPV8T6111R","interactive":"false"}
+gcloud compute addresses list --global
+```

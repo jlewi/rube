@@ -46,3 +46,19 @@ resource "google_secret_manager_secret_iam_member" "rube-demo-accessor" {
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:rube-demo@foyle-dev.iam.gserviceaccount.com"
 }
+
+resource "google_compute_global_address" "rube_demo" {
+  name         = "foyle-dev"
+  description  = "Static IP address for foyle-dev gateway"
+  address_type = "EXTERNAL"
+  ip_version   = "IPV4"
+}
+
+resource "google_compute_managed_ssl_certificate" "foyle_dev_cert" {
+  name    = "foyle-dev-cert"
+  managed {
+    domains = [
+      "dev.foyle.io",      
+    ]
+  }
+}
