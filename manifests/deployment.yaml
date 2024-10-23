@@ -47,5 +47,17 @@ spec:
             memory: "256Mi"
           requests:
             cpu: "250m"
-            memory: "256Mi"        
+            memory: "256Mi"
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 10
       serviceAccountName: rube

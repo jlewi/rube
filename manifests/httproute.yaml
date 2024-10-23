@@ -10,13 +10,18 @@ spec:
   - name: external-http
     namespace: gateway
   hostnames:
-  - "dev.foyle.io"
-  rules:
+  - "dev.foyle.io"  
   rules:
   - matches:
     - path:
         type: PathPrefix
         value: /demo/dev
+    filters:
+      - type: URLRewrite
+        urlRewrite:          
+          path:
+            type: ReplacePrefixMatch
+            replacePrefixMatch: /
     backendRefs:
     - name: rube
       port: 80
