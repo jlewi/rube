@@ -40,3 +40,9 @@ resource "google_secret_manager_secret_iam_member" "accessor" {
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:rube-demo@foyle-dev.iam.gserviceaccount.com"
 }
+
+resource "google_secret_manager_secret_iam_member" "rube-demo-accessor" {
+  secret_id = "rube-demo-openai-apikey"
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:rube-demo@foyle-dev.iam.gserviceaccount.com"
+}
