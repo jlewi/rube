@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"context"
+	_ "embed"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/go-logr/zapr"
@@ -10,12 +11,20 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
+	"html/template"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+)
+
+//go:embed helloworld.html.tmpl
+var pageTemplateString string
+
+var (
+	pageTemplate = template.Must(template.New("page").Parse(pageTemplateString))
 )
 
 // Server is the server
@@ -129,6 +138,11 @@ func trapInterrupt(s *Server) {
 	}()
 }
 
+type PageData struct {
+	Greeting string
+	Trace    string
+}
+
 func (s *Server) sayHello(ctx *gin.Context) {
 	span := trace.SpanFromContext(ctx.Request.Context())
 	traceId := span.SpanContext().TraceID()
@@ -150,16 +164,25 @@ func (s *Server) sayHello(ctx *gin.Context) {
 		return
 	}
 	log.Info("OpenAI response", "response", resp)
+
 	if len(resp.Choices) > 0 {
-		ctx.String(http.StatusOK, "Greeting: %s\n traceId: %s", resp.Choices[0].Message.Content, traceId.String())
+		data := PageData{
+			Greeting: resp.Choices[0].Message.Content,
+			Trace:    traceId.String(),
+		}
+
+		// Render the template using the Gin context
+		ctx.Status(http.StatusOK)
+		ctx.Writer.Header().Set("Content-Type", "text/html")
+		if err := pageTemplate.Execute(ctx.Writer, data); err != nil {
+			log.Error(err, "Failed to execute template")
+		}
 		return
 	}
 	ctx.String(http.StatusOK, "Hello, world!\n traceId: %s", traceId.String())
 }
 
 func (s *Server) healthCheck(ctx *gin.Context) {
-	log := zapr.NewLogger(zap.L())
-
 	// TODO(jeremy): We should return the version
 	d := gin.H{
 		"server": "rube",

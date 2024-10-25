@@ -68,3 +68,8 @@ resource "google_secret_manager_secret_iam_member" "rube_prod_accessor" {
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:rube-demo@foyle-dev.iam.gserviceaccount.com"
 }
+resource "google_secret_manager_secret_iam_member" "rube_dev_access" {
+  secret_id = "rube-dev-openai-apikey"
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:rube-demo@foyle-dev.iam.gserviceaccount.com"
+}

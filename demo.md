@@ -2,22 +2,14 @@
 
 ## Setup
 
-Port forward to the service to make it accessible from the local machine:
-
-```bash {"id":"01JAV2SP5BFF7W5N4AH7K1PMWF","interactive":"false"}
-kubectl -n rube port-forward svc/rube 8080:80
-```
-
-## Setup
-
 * Remove the permission to read the secret openai-api-key by the rube-demo account
-*  edit iac/main.tf to remove the permission to read the secret for dev
+* edit iac/main.tf to remove the permission to read the secret for dev
 * Make sure it is configured to use openai-api-key and deployed.
-
 * Apply the terraform
 
 ```bash
 cd iac
+tfctl delete "google_secret_manager_secret_iam_member" "rube_dev_access" 
 terraform apply --auto-approve
 ```
 
