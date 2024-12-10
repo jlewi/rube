@@ -21,8 +21,13 @@ func (a *App) Run(httpPort int, honeycombApiKeyFile string, openaiApiKeyFile str
 		return errors.Wrapf(err, "Failed to setup logging")
 	}
 
-	if err := a.SetupHoneycomb(honeycombApiKeyFile); err != nil {
-		return errors.Wrapf(err, "Failed to setup Honeycomb")
+	log := zapr.NewLogger(zap.L())
+	if honeycombApiKeyFile != "" {
+		if err := a.SetupHoneycomb(honeycombApiKeyFile); err != nil {
+			return errors.Wrapf(err, "Failed to setup Honeycomb")
+		}
+	} else {
+		log.Info("Not setting up honeycomb")
 	}
 
 	client, err := NewClient(openaiApiKeyFile)
